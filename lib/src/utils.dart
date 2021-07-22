@@ -181,6 +181,8 @@ abstract class LoadShowAd<T> with UniqueKeyMixin {
   /// ```
   Stream<Map<T, dynamic>> get onEvent => onEventController.stream;
 
+  bool get hasListener => onEventController.hasListener;
+
   /// Channel to communicate with controller
   // @protected
   late MethodChannel channel;
