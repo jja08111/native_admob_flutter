@@ -292,7 +292,10 @@ class _NativeAdState extends State<NativeAd>
     assertVersionIsSupported();
 
     if (!controller.isLoaded) {
-      if (state == NativeAdEvent.loading) return widget.loading ?? SizedBox();
+      if (state == NativeAdEvent.loading) {
+        final loading = widget.loading ?? SizedBox();
+        return widget.builder?.call(context, loading) ?? loading;
+      }
       if (state == NativeAdEvent.loadFailed) return widget.error ?? SizedBox();
     }
 
