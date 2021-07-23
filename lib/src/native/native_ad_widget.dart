@@ -207,7 +207,9 @@ class NativeAd extends StatefulWidget {
 }
 
 class _NativeAdState extends State<NativeAd>
-    with AutomaticKeepAliveClientMixin<NativeAd> {
+    with
+        AutomaticKeepAliveClientMixin<NativeAd>,
+        SingleTickerProviderStateMixin {
   late NativeAdController controller;
   NativeAdEvent state = NativeAdEvent.loading;
 
@@ -291,54 +293,75 @@ class _NativeAdState extends State<NativeAd>
     assertPlatformIsSupported();
     assertVersionIsSupported();
 
-    if (!controller.isLoaded) {
-      if (state == NativeAdEvent.loading) {
-        final loading = widget.loading ?? SizedBox();
-        return widget.builder?.call(context, loading) ?? loading;
-      }
-      if (state == NativeAdEvent.loadFailed) return widget.error ?? SizedBox();
-    }
+    Widget? result;
 
-    Widget w;
+    if (!controller.isLoaded) {
+      switch (state) {
+        case NativeAdEvent.loading:
+          final loading = widget.loading ?? SizedBox();
+          result = widget.builder?.call(context, loading) ?? loading;
+          break;
+        case NativeAdEvent.loadFailed:
+          result = widget.error ?? SizedBox();
+          break;
+        default:
+      }
+    }
 
     final params = layout(widget);
     params.addAll({'controllerId': controller.id});
 
-    return LayoutBuilder(builder: (context, consts) {
-      final size = consts.biggest;
-      final height = widget.height ?? size.height;
-      final width = widget.width ?? size.width;
-      assert(
-        height > 32 && width > 32,
-        'Native ad views that have a width or height smaller than '
-        '32 will be demonetized in the future. '
-        'Please make sure the ad view has sufficiently large area.',
-      );
-
-      if (Platform.isAndroid) {
-        w = AndroidPlatformView(
-          params: params,
-          viewType: _viewType,
-          delayToShow: widget.delayToShow,
-          useHybridComposition: widget.useHybridComposition,
+    if (result == null) {
+      result = LayoutBuilder(builder: (context, consts) {
+        Widget w;
+        final size = consts.biggest;
+        final height = widget.height ?? size.height;
+        final width = widget.width ?? size.width;
+        assert(
+          height > 32 && width > 32,
+          'Native ad views that have a width or height smaller than '
+          '32 will be demonetized in the future. '
+          'Please make sure the ad view has sufficiently large area.',
         );
-      } else if (Platform.isIOS) {
-        w = UiKitView(
-          viewType: _viewType,
-          creationParamsCodec: StandardMessageCodec(),
-          creationParams: params,
-        );
-      } else {
-        return SizedBox();
-      }
 
-      w = SizedBox(
-        height: height,
-        width: width,
-        child: w,
-      );
-      return widget.builder?.call(context, w) ?? w;
-    });
+        if (Platform.isAndroid) {
+          w = AndroidPlatformView(
+            params: params,
+            viewType: _viewType,
+            delayToShow: widget.delayToShow,
+            useHybridComposition: widget.useHybridComposition,
+          );
+        } else if (Platform.isIOS) {
+          w = UiKitView(
+            viewType: _viewType,
+            creationParamsCodec: StandardMessageCodec(),
+            creationParams: params,
+          );
+        } else {
+          return SizedBox();
+        }
+
+        w = SizedBox(
+          height: height,
+          width: width,
+          child: w,
+        );
+        return widget.builder?.call(context, w) ?? w;
+      });
+    }
+
+    return AnimatedSize(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      child: AnimatedSwitcher(
+        // 안드로이드 뷰를 띄울 때 250밀리초의 대기 시간이 있어 인터벌을 준다.
+        switchInCurve: const Interval(0.5, 1.0, curve: Curves.easeIn),
+        switchOutCurve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+        duration: const Duration(milliseconds: 500),
+        child: result,
+      ),
+    );
   }
 
   Map<String, dynamic> layout(NativeAd widget) {
