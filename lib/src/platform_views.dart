@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -16,6 +17,7 @@ class AndroidPlatformView extends StatefulWidget {
     bool? useHybridComposition,
     this.onCreated,
     this.delayToShow,
+    this.loading,
   })  : this.useHybridComposition =
             useHybridComposition ?? MobileAds.useHybridComposition,
         super(key: key);
@@ -24,7 +26,7 @@ class AndroidPlatformView extends StatefulWidget {
   final String viewType;
   final bool useHybridComposition;
   final Map<String, dynamic> params;
-
+  final Widget? loading;
   final Duration? delayToShow;
 
   @override
@@ -90,9 +92,19 @@ class _AndroidPlatformViewState extends State<AndroidPlatformView> {
             ..create();
         },
       );
-    return Opacity(
-      opacity: visible ? 1 : 0,
-      child: view,
+    return Stack(
+      children: [
+        AnimatedOpacity(
+          duration: kThemeChangeDuration,
+          opacity: visible ? 1 : 0,
+          child: view,
+        ),
+        AnimatedOpacity(
+          duration: kThemeChangeDuration,
+          opacity: visible ? 0 : 1,
+          child: widget.loading,
+        ),
+      ],
     );
   }
 }

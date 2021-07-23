@@ -328,6 +328,7 @@ class _NativeAdState extends State<NativeAd>
           w = AndroidPlatformView(
             params: params,
             viewType: _viewType,
+            loading: widget.loading,
             delayToShow: widget.delayToShow,
             useHybridComposition: widget.useHybridComposition,
           );
