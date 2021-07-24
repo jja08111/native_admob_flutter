@@ -320,16 +320,19 @@ class NativeAdController extends LoadShowAd<NativeAdEvent>
     }
     switch (call.method) {
       case 'loading':
+        isLoading = true;
         isLoaded = false;
         onEventController.add({NativeAdEvent.loading: null});
         break;
       case 'onAdFailedToLoad':
+        isLoading = false;
         isLoaded = false;
         onEventController.add({
           NativeAdEvent.loadFailed: AdError.fromJson(call.arguments),
         });
         break;
       case 'onAdLoaded':
+        isLoading = false;
         isLoaded = true;
         final arguments = call.arguments! as Map;
         arguments.forEach((key, value) {
@@ -397,7 +400,8 @@ class NativeAdController extends LoadShowAd<NativeAdEvent>
   }) async {
     ensureAdNotDisposed();
     assertMobileAdsIsInitialized();
-    if (!debugCheckAdWillReload(isLoaded, force)) return false;
+    if (!debugCheckAdWillReload(isLoaded, force, isLoading)) return false;
+    isLoading = true;
     unitId ??= MobileAds.nativeAdUnitId ?? MobileAds.nativeAdTestUnitId;
     isLoaded = (await channel.invokeMethod<bool>('loadAd', {
       'unitId': unitId,
@@ -407,6 +411,7 @@ class NativeAdController extends LoadShowAd<NativeAdEvent>
     }).timeout(
       timeout ?? this.loadTimeout,
       onTimeout: () {
+        isLoading = false;
         if (!onEventController.isClosed && !isLoaded)
           onEventController.add({
             NativeAdEvent.loadFailed: AdError.timeoutError,
@@ -414,6 +419,7 @@ class NativeAdController extends LoadShowAd<NativeAdEvent>
         return false;
       },
     ))!;
+    isLoading = false;
     if (isLoaded) lastLoadedTime = DateTime.now();
     return isLoaded;
   }

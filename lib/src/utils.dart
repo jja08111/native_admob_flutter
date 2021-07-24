@@ -63,11 +63,12 @@ void assertVersionIsSupported([bool usePlatformView = true]) {
   }
 }
 
-bool debugCheckAdWillReload([bool? isLoaded, bool? force]) {
+bool debugCheckAdWillReload([bool? isLoaded, bool? force, bool? isLoading]) {
+  isLoading ??= false;
   isLoaded ??= false;
   force ??= false;
-  if (isLoaded && !force) {
-    print('An ad is already avaiable, no need to load another');
+  if ((isLoading || isLoaded) && !force) {
+    print('An ad is already avaiable or loading, no need to load another');
     return false;
   }
   return true;
@@ -191,6 +192,13 @@ abstract class LoadShowAd<T> with UniqueKeyMixin {
 
   /// Check if the ad is loaded
   bool get isLoaded => _loaded;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  @protected
+  set isLoading(bool loading) {
+    _isLoading = loading;
+  }
 
   /// The time the ad can be kept loaded.
   ///
