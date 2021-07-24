@@ -99,10 +99,13 @@ class _AndroidPlatformViewState extends State<AndroidPlatformView> {
           opacity: visible ? 1 : 0,
           child: view,
         ),
-        AnimatedOpacity(
-          duration: kThemeChangeDuration,
-          opacity: visible ? 0 : 1,
-          child: widget.loading,
+        IgnorePointer(
+          ignoring: true,
+          child: AnimatedOpacity(
+            duration: kThemeChangeDuration,
+            opacity: visible ? 0 : 1,
+            child: widget.loading,
+          ),
         ),
       ],
     );
