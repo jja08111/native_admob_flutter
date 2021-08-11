@@ -402,7 +402,7 @@ class NativeAdController extends LoadShowAd<NativeAdEvent>
     assertMobileAdsIsInitialized();
     if (!debugCheckAdWillReload(isLoaded, force, isLoading)) return false;
     isLoading = true;
-    unitId ??= MobileAds.nativeAdUnitId ?? MobileAds.nativeAdTestUnitId;
+    unitId ??= this.unitId ?? MobileAds.nativeAdUnitId ?? MobileAds.nativeAdTestUnitId;
     isLoaded = (await channel.invokeMethod<bool>('loadAd', {
       'unitId': unitId,
       'options': (options ?? NativeAdOptions()).toJson(),
